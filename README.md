@@ -1,4 +1,4 @@
-# ledctrl
+# ledctrl - A tool for controlling SEED Respeaker HAT LED Ring
 
 A simple command line tool for controlling the LED ring on the Seeed ReSpeaker 4-Mic Raspberry Pi Hat.
 
@@ -30,10 +30,21 @@ A simple command line tool for controlling the LED ring on the Seeed ReSpeaker 4
 
 Run the tool from the command line. Example:
 ```bash
-dotnet run -- [options]
+./ledctrol
 ```
-Replace `[options]` with the appropriate commands to control the LED ring.  
-(Refer to your code or update this section with real commands/options as needed.)
+
+The console application ledctrl accepts the following commands (case-insensitive, German keywords for colors):
+
+    on — Turns the LED ring on (white).
+    off — Turns the LED ring off.
+    rot — Sets the LED ring to red.
+    grün — Sets the LED ring to green.
+    blau — Sets the LED ring to blue.
+    weiß — Sets the LED ring to white.
+    Zufall — Activates a random LED pattern.
+    RedAlert — Activates a red spinning alert pattern.
+    exit — Exits the application.
+
 
 ## Contributing
 
