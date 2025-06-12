@@ -24,6 +24,7 @@ A simple command line tool for controlling the LED ring on the Seeed ReSpeaker 4
 2. Build the project:
    ```bash
    dotnet build
+   dotnet publish -c Release -r linux-arm64 --self-contained true /p:PublishTrimmed=true
    ```
 
 ## Usage
