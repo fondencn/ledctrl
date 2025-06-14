@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace IoT.Core
 {
-    public class IoTcoreLedService
+    public class RespeakerHatDevice : LedDevice, ILEDService, IDisposable
     {
         /// <summary>
         /// LED Power on Respeaker Core V2
@@ -21,7 +21,20 @@ namespace IoT.Core
         /// </summary>
         private const int POWER_PIN_RASPI = 5; // see MRAA-12 mapping
 
-        public static void Voltage_On()
+        private readonly int _LedCount;
+
+        public RespeakerHatDevice(int ledCount = 12)
+            : base()
+        {
+            if (!IsOnRaspi)
+            {
+                throw new NotSupportedException("This device is only supported on Raspberry Pi with Respeaker Hat.");
+            }
+            _LedCount = ledCount;
+            Voltage_On();
+        }
+
+        public void Voltage_On()
         {
             int powerPin = IsOnRaspi ? POWER_PIN_RASPI : POWER_PIN;
             System.Device.Gpio.PinValue pinVal = IsOnRaspi ? System.Device.Gpio.PinValue.High : System.Device.Gpio.PinValue.Low;
@@ -34,7 +47,7 @@ namespace IoT.Core
             Logger.Instance.LogDebug("Voltage_On(): GPIO " + powerPin + " to " + pinVal);
         }
 
-        public static void Voltage_Off()
+        public void Voltage_Off()
         {
             //SolidColor(Color.Black);
 
@@ -49,36 +62,11 @@ namespace IoT.Core
             Logger.Instance.LogDebug("Voltage_Off(): GPIO " + powerPin + " to " + pinVal);
         }
 
-        private static bool IsOnRaspi
-        {
-            get
-            {
-                bool isRaspi;
-                bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-                if (isLinux)
-                {
-                    try
-                    {
-                        string cpuinfo = File.ReadAllText("/proc/cpuinfo");
-                        isRaspi = cpuinfo.Contains("Raspberry Pi", StringComparison.OrdinalIgnoreCase);
-                    }
-                    catch
-                    {
-                        isRaspi = false;
-                    }
-                }
-                else
-                {
-                    isRaspi = false;
-                }
-                return isRaspi;
-            }
-        }
 
-        public static void SolidColor(Color color)
+        public void SetSolidColor(Color color)
         {
             var spi = SpiDevice.Create(new SpiConnectionSettings(0));
-            using (Apa102 apa102 = new Apa102(spi, 12))
+            using (Apa102 apa102 = new Apa102(spi, _LedCount))
             {
                 for (var i = 0; i < apa102.Pixels.Length; i++)
                 {
@@ -89,10 +77,10 @@ namespace IoT.Core
             }
         }
 
-        public static void Spin(Color color, int count = 1)
+        public void Spin(Color color, int count = 1)
         {
             var spi = SpiDevice.Create(new SpiConnectionSettings(0));
-            using (Apa102 apa102 = new Apa102(spi, 12))
+            using (Apa102 apa102 = new Apa102(spi, _LedCount))
             {
                 for (int c = 0; c < count; c++)
                 {
@@ -120,25 +108,53 @@ namespace IoT.Core
             }
         }
 
-
-        public static void AnimateRandom()
+        public void SetLeds(Color[] colors)
         {
-            Random random = new Random();
-
-            using (Apa102 apa102 = new Apa102(SpiDevice.Create(new SpiConnectionSettings(0)), 12))
+            if (colors == null || colors.Length != _LedCount)
             {
-
-                for (int count = 0; count < 3; count++)
-                {
-                    for (var i = 0; i < apa102.Pixels.Length; i++)
-                    {
-                        apa102.Pixels[i] = Color.FromArgb(255, random.Next(256), random.Next(256), random.Next(256));
-                    }
-
-                    apa102.Flush();
-                    Thread.Sleep(500);
-                }
+                throw new ArgumentException($"Colors array must have exactly {_LedCount} elements.");
             }
+
+            var spi = SpiDevice.Create(new SpiConnectionSettings(0));
+            using (Apa102 apa102 = new Apa102(spi, _LedCount))
+            {
+                for (int i = 0; i < _LedCount; i++)
+                {
+                    apa102.Pixels[i] = colors[i];
+                }
+                apa102.Flush();
+            }
+        }
+        
+        public void Trace()
+        {
+            Spin(Color.FromArgb(100, 0, 0, 255), 1); // Blue trace
+        }
+        public void Listen()
+        {
+            Spin(Color.FromArgb(100, 0, 255, 0)); // Green listen
+        }
+        public void Wait()
+        {
+            Spin(Color.FromArgb(100, 255, 255, 0)); // Yellow wait
+        }
+        public void Speak()
+        {
+            Spin(Color.FromArgb(100, 255, 0, 0)); // Red speak
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                Voltage_Off();
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.LogException("Error while turning off voltage", ex);
+            }
+
+            Logger.Instance.LogDebug("RespeakerHatDevice disposed.");
         }
     }
 }

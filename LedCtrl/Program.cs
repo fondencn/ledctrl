@@ -5,40 +5,58 @@ namespace LedCtrl
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            Console.WriteLine("*******************************************");
-            Console.WriteLine("* Raspberry PI APA102 LED Controller Demo *");
-            Console.WriteLine("*******************************************");
+            Console.WriteLine("*************************************************");
+            Console.WriteLine("* Respeaker PI APA102 LED / USB Controller Demo *");
+            Console.WriteLine("*************************************************");
+            Console.WriteLine("");
             Console.WriteLine("Valid options are: " + String.Join(" , ", ConsoleIntent.AllIntents.Select(item => item.Keyword)));
-
-            ConsoleIntent intent;
-            if (args?.Any() == true)
+            Console.WriteLine("");
+            Console.WriteLine("Select usb or hat to use the respective device.");
+            Console.WriteLine("**************************************************");
+            Console.WriteLine("Enter a command to start or type 'exit' to quit.");
+            int returnCode = 0;
+            try
             {
-                foreach (string arg in args)
+                ConsoleIntent intent;
+                if (args?.Any() == true)
                 {
-                    intent = ConsoleIntent.Parse(arg);
-                    intent.Handle();
-                }
-            }
-            else
-            {
-                do
-                {
-                    string consoleInput = Console.ReadLine();
-                    intent = ConsoleIntent.Parse(consoleInput);
-                    if (intent != null)
+                    foreach (string arg in args)
                     {
-                        Console.WriteLine("Handle Intent: " + intent.Keyword + "...");
+                        intent = ConsoleIntent.Parse(arg);
                         intent.Handle();
                     }
-                    else
-                    {
-                        Console.WriteLine("no matching intent found - did you enter something stupid?");
-                    }
                 }
-                while (intent != ConsoleIntent.Exit);
+                else
+                {
+                    do
+                    {
+                        string consoleInput = Console.ReadLine();
+                        intent = ConsoleIntent.Parse(consoleInput);
+                        if (intent != null)
+                        {
+                            Console.WriteLine("Handle command: " + intent.Keyword + "... ");
+                            intent.Handle();
+                        }
+                        else
+                        {
+                            Console.WriteLine("no matching command found - please enter valid command");
+                        }
+                    }
+                    while (intent != ConsoleIntent.Exit);
+                }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+                returnCode = 1;
+            }
+            finally
+            {
+                ConsoleIntent.Dispose();
+            }
+            return returnCode;
         }
     }
 }

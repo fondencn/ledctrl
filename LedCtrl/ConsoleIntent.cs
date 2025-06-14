@@ -8,21 +8,32 @@ using System.Threading.Tasks;
 
 namespace LedCtrl
 {
-    class ConsoleIntent
+    internal class ConsoleIntent
     {
+        private static ILEDService _ledService;
+
+
+
         public static ConsoleIntent Exit { get; } = new ConsoleIntent("exit");
-        public static ConsoleIntent On { get; } = new ConsoleIntent("on");
-        public static ConsoleIntent Off { get; } = new ConsoleIntent("off");
+        public static ConsoleIntent Usb { get; } = new ConsoleIntent("usb");
+        public static ConsoleIntent Hat { get; } = new ConsoleIntent("hat");
         public static ConsoleIntent Red { get; } = new ConsoleIntent("rot");
         public static ConsoleIntent Green { get; } = new ConsoleIntent("grün");
         public static ConsoleIntent Blue { get; } = new ConsoleIntent("blau");
         public static ConsoleIntent White { get; } = new ConsoleIntent("weiß");
-        public static ConsoleIntent RandomPattern { get; } = new ConsoleIntent("Zufall");
-        public static ConsoleIntent RedAlert { get; } = new ConsoleIntent("RedAlert");
+        public static ConsoleIntent Black { get; } = new ConsoleIntent("aus");
+        public static ConsoleIntent Wait { get; } = new ConsoleIntent("wait");
+        public static ConsoleIntent Spin { get; } = new ConsoleIntent("spin");
+        public static ConsoleIntent Trace { get; } = new ConsoleIntent("trace");
+        public static ConsoleIntent Listen { get; } = new ConsoleIntent("listen");
+        public static ConsoleIntent Speak { get; } = new ConsoleIntent("speak");
+
+       public static ConsoleIntent RedAlert { get; } = new ConsoleIntent("RedAlert");
 
         public static IReadOnlyCollection<ConsoleIntent> AllIntents { get; } = new ConsoleIntent[]
         {
-            Exit, On, Off, Red, Green, Blue, White, RandomPattern, RedAlert
+            Exit, Usb, Hat, Red, Green, Blue, White, RedAlert, 
+            Black, Wait, Spin, Trace, Listen, Speak
         }.ToList()
          .AsReadOnly();
 
@@ -38,44 +49,71 @@ namespace LedCtrl
             if (this == Exit)
             {
                 Console.WriteLine("exiting...");
+                
             }
-            else if(this == On)
+
+            else if (this == Usb)
             {
-                IoTcoreLedService.Voltage_On();
-                IoTcoreLedService.SolidColor(Color.White);
+                _ledService = new RespeakerUsbDevice();
             }
-            else if (this == Off)
+
+            else if (this == Hat)
             {
-                IoTcoreLedService.SolidColor(Color.Black);
-                IoTcoreLedService.Voltage_Off();
+                _ledService = new RespeakerHatDevice();
             }
+
             else if (this == Red)
             {
-                IoTcoreLedService.SolidColor(Color.Red);
+                _ledService.SetSolidColor(Color.Red);
             }
             else if (this == Green)
             {
-                IoTcoreLedService.SolidColor(Color.Green);
+                _ledService.SetSolidColor(Color.Green);
             }
             else if (this == Blue)
             {
-                IoTcoreLedService.SolidColor(Color.Blue);
+                _ledService.SetSolidColor(Color.Blue);
             }
             else if (this == White)
             {
-                IoTcoreLedService.SolidColor(Color.Blue);
+                _ledService.SetSolidColor(Color.White);
             }
-            else if (this == RandomPattern)
+            else if (this == Black)
             {
-                IoTcoreLedService.AnimateRandom();
+                _ledService.SetSolidColor(Color.Black);
             }
+            else if (this == Wait)
+            {
+                _ledService.Wait();
+            }
+            else if (this == Spin)
+            {
+                _ledService.Spin(Color.White, 5);
+            }
+            else if (this == Trace)
+            {
+                _ledService.Trace();
+            }
+            else if (this == Listen)
+            {
+                _ledService.Listen();
+            }
+            else if (this == Speak)
+            {
+                _ledService.Speak();
+            }
+            // Special case for RedAlert
             else if (this == RedAlert)
             {
                 int spinCount = 10;
-                IoTcoreLedService.Spin(Color.Red, spinCount);
+                _ledService.Spin(Color.Red, spinCount);
             }
         }
 
+        internal static void Dispose()
+        {
+            (_ledService as IDisposable)?.Dispose();
+        }
 
         public string Keyword { get; set; }
 
