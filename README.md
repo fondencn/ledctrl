@@ -35,16 +35,40 @@ Run the tool from the command line. Example:
 ```
 
 The console application ledctrl accepts the following commands (case-insensitive, German keywords for colors):
+First select `hat` if using the respeaker raspberry pi hat or `usb` if you are using the respeaker usb device. 
 
-    on — Turns the LED ring on (white).
-    off — Turns the LED ring off.
-    rot — Sets the LED ring to red.
-    grün — Sets the LED ring to green.
-    blau — Sets the LED ring to blue.
-    weiß — Sets the LED ring to white.
-    Zufall — Activates a random LED pattern.
-    RedAlert — Activates a red spinning alert pattern.
-    exit — Exits the application.
+Then enter valid commands like
+- rot
+- blau
+- grün
+- wait
+- spin
+- trace (for DOA-visualization)
+
+
+## Needed permisisons
+Please note that correct permissions are needed to run this application, so either run this tool as `sudo` or adjust your `udev` rules.
+
+### UDEV settings (ubuntu)
+To allow your user to access the ReSpeaker USB device (Vendor ID 2886, Product ID 0018) without root, create a udev rule:
+
+Create the rule file:
+``` 
+sudo nano /etc/udev/rules.d/99-respeaker.rules
+```
+Paste this line:
+```
+SUBSYSTEM=="usb", ATTRS{idVendor}=="2886", ATTRS{idProduct}=="0018", MODE="0666"
+```
+Save and exit (Ctrl+O, Enter, Ctrl+X).
+
+Reload udev rules and replug the device:
+```
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+Now you can run your app as a normal user.
 
 
 ## Contributing
